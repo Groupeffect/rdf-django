@@ -22,10 +22,13 @@ Http CRUD methods are made with rest_framework.
     http://localhost:8000/api/account/
 ### json:
     GET, POST, PUT, PATCH, DELETE, OPTIONS
-    http://localhost:8000/api/account/person?format=json
+    http://localhost:8000/api/account/person/?format=json
+    http://localhost:8000/api/account/person/{pk}/?format=json
+
 ### xml:
     GET
-    http://localhost:8000/api/account/person?format=xml
+    http://localhost:8000/api/account/person/?format=xml
+    http://localhost:8000/api/account/person/{pk}/?format=xml
 
 ## Ontologies
 all ontologies are used from :
