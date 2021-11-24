@@ -54,4 +54,5 @@ optionally you can add [OntoGraf](https://protegewiki.stanford.edu/wiki/OntoGraf
 ## Ressources
 
 [Github: awesome-semantic-web](https://github.com/semantalytics/awesome-semantic-web#contents)
+
 [semantic scholar](https://www.semanticscholar.org/paper/Social-Participation-Network%3A-Linking-Things%2C-and-Piperagkas-Angarita/86c670ef7454d6a4cbaf6a9c0abe72035eff3dae#references)
