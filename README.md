@@ -6,31 +6,39 @@ The framework enriches data points with semantic namespaces through model and se
 Http CRUD methods are made with rest_framework.
 
 ## Requirements
+
     Django
     djangorestframework
     rdflib
     django-environ
 
 ## Installation
+
     pip install -r requirements.txt
     python manage.py makemigrations
     python manage.py migrate
     python manage.py runserver
 
 ## Api Endpoints
+
 ### browsable api:
+
     http://localhost:8000/api/account/
+
 ### json:
+
     GET, POST, PUT, PATCH, DELETE, OPTIONS
     http://localhost:8000/api/account/person/?format=json
     http://localhost:8000/api/account/person/{pk}/?format=json
 
 ### xml:
+
     GET
     http://localhost:8000/api/account/person/?format=xml
     http://localhost:8000/api/account/person/{pk}/?format=xml
 
 ## Ontologies
+
 all ontologies are used from :
 ####- [rdflib](https://rdflib.readthedocs.io/)
 
@@ -38,8 +46,9 @@ all ontologies are used from :
 
 one tool which I use is:
 
-####- [Protege website](https://protege.stanford.edu/)
-####- [GitHub: protege](https://github.com/protegeproject/protege)
+#### [Protege website](https://protege.stanford.edu/)
+
+#### [GitHub: protege](https://github.com/protegeproject/protege)
 
     1. run django server
     2. opened the protege GUI
