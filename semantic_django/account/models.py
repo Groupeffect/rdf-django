@@ -4,7 +4,7 @@ from django.conf import settings
 from rdflib import (
     Graph, URIRef, Literal, 
     # namespaces:
-    DC, PROV, RDF, FOAF,
+    DC, PROV, RDF, FOAF, graph,
 )
 
 
@@ -14,6 +14,24 @@ class MetaModel(models.Model):
     class Meta:
         abstract = True
 
+    def get_rdf_description(self, serialize=True):
+        graph = Graph()
+        uri = self.get_uri()
+        graph.add((
+            uri,
+            RDF.type,
+            DC.description
+        ))
+        graph.add((
+            uri,
+            DC.description,
+            Literal(self.description)
+        ))
+
+        
+        if serialize:
+            return graph.serialize(format=settings.GLOBAL_GRAPH_IO_FORMAT)
+        return graph
 
 class Organization(MetaModel):
     website = models.URLField(blank=True, null=True)
@@ -24,6 +42,7 @@ class Organization(MetaModel):
             graph = Graph()
             uri = self.get_uri()
             graph.add((uri, RDF.type, PROV.Organization))
+            graph.parse(data=self.get_rdf_description(), format=settings.GLOBAL_GRAPH_IO_FORMAT)
             graph.add((
                 uri,
                 FOAF.Organization,
@@ -53,6 +72,7 @@ class Person(MetaModel):
     def get_rdf_representation(self, serialize: bool=True, format: str=settings.GLOBAL_GRAPH_IO_FORMAT):
         graph = Graph()
         uri = self.get_uri()
+        graph.parse(data=self.get_rdf_description(), format=settings.GLOBAL_GRAPH_IO_FORMAT)
         graph.add((uri, RDF.type, PROV.Person))
         graph.add((
             uri,

@@ -1,6 +1,4 @@
-from os import read
-from rest_framework import fields, serializers, reverse
-from rdflib import Graph
+from rest_framework import serializers, reverse
 from . import models
 
 
