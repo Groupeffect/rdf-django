@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 import environ
 
@@ -25,8 +26,15 @@ ENVS = environ.Env(
     DJANGO_DEBUG=(bool, True),
     DJANGO_SECRET_KEY=(
         str, 'django-insecure-j3^o0)_*%jkx^6zt+4a((t42b26q)1v5-x5mn9%y9$%vlzo@st'
-    )
+    ),
+    DJANGO_GLOBAL_GRAPH_IO_FORMAT=(str, "xml"),
+    DJANGO_GLOBAL_HOST_URL = (str, "http://localhost:8000"),
 )
+GLOBAL_GRAPH_IO_FORMAT = ENVS.str('DJANGO_GLOBAL_GRAPH_IO_FORMAT')
+GLOBAL_HOST_URL = ENVS.str('DJANGO_GLOBAL_HOST_URL')
+GLOBAL_API_ACCOUNT_PERSON_URL = os.path.join(GLOBAL_HOST_URL,'api', 'account', 'person')
+GLOBAL_API_ACCOUNT_ORGANIZATION_URL =  os.path.join(GLOBAL_HOST_URL,'api', 'account', 'organization')
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = ENVS.bool('DJANGO_DEBUG')
