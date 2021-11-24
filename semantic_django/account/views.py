@@ -21,8 +21,6 @@ class PersonModelViewSet(viewsets.ModelViewSet):
         StaticXmlRenderer
     ]
 
-    http_method_names = ['get']
-
     def list(self, request, **kwargs):
         result = super().list(self, request, **kwargs)
         data = result.data
