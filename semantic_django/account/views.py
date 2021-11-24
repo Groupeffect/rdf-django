@@ -10,16 +10,7 @@ class StaticXmlRenderer(renderers.StaticHTMLRenderer):
     media_type = "text/xml"
     format = "xml"
 
-
-class PersonModelViewSet(viewsets.ModelViewSet):
-
-    serializer_class = serializers.PersonSerializer
-    queryset = models.Person.objects.all()
-    renderer_classes = [
-        renderers.BrowsableAPIRenderer,
-        renderers.JSONRenderer,
-        StaticXmlRenderer
-    ]
+class MetaModelViewset(viewsets.ModelViewSet):
 
     def list(self, request, **kwargs):
         result = super().list(self, request, **kwargs)
@@ -36,3 +27,33 @@ class PersonModelViewSet(viewsets.ModelViewSet):
         if request.GET.get('format') == "xml":
             result.data = result.data['rdf']
         return result
+
+
+class PersonModelViewSet(MetaModelViewset):
+
+    serializer_class = serializers.PersonSerializer
+    queryset = models.Person.objects.all()
+    renderer_classes = [
+        renderers.BrowsableAPIRenderer,
+        renderers.JSONRenderer,
+        StaticXmlRenderer
+    ]
+    def get_serializer_class(self):
+        if self.request.GET.get('format') == "xml":
+            return serializers.PersonRDFSerializer
+        return self.serializer_class
+
+class OrganizationModelViewSet(MetaModelViewset):
+
+    serializer_class = serializers.OrganizationSerializer
+    queryset = models.Organization.objects.all()
+    renderer_classes = [
+        renderers.BrowsableAPIRenderer,
+        renderers.JSONRenderer,
+        StaticXmlRenderer
+    ]
+
+    def get_serializer_class(self):
+        if self.request.GET.get('format') == "xml":
+            return serializers.OrganizationRDFSerializer
+        return self.serializer_class

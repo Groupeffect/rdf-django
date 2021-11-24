@@ -78,7 +78,7 @@ class Person(MetaModel):
                 graph.add((
                     organization.get_uri(),
                     DC.relation,
-                    self.get_uri()
+                    uri
                 ))
 
         if serialize:
