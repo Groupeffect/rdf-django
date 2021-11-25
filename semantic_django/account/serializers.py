@@ -1,3 +1,4 @@
+from django.conf import settings
 from rest_framework import serializers, reverse
 from . import models
 
@@ -22,16 +23,19 @@ class PersonSerializer(MetaModelSerializer):
             "firstName",
             "lastName",
             "description",
+            "organizations",
+            "employedAt",
         ]
 
     def get_uri(self, obj):
+        return f"{settings.GLOBAL_HOST_URL}{reverse.reverse('person-detail', kwargs={'pk': obj.id})}"
 
-        return reverse.reverse('person-detail', kwargs={"pk": obj.id})
 
 class PersonRDFSerializer(MetaModelSerializer):
     class Meta:
         model = models.Person
-        fields = ["rdf",]
+        fields = ["rdf", ]
+
 
 class OrganizationSerializer(MetaModelSerializer):
 
@@ -51,8 +55,8 @@ class OrganizationSerializer(MetaModelSerializer):
 
         return reverse.reverse('organization-detail', kwargs={"pk": obj.id})
 
+
 class OrganizationRDFSerializer(MetaModelSerializer):
     class Meta:
         model = models.Organization
-        fields = ["rdf",]
-
+        fields = ["rdf", ]
