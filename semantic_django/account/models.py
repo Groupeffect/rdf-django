@@ -4,7 +4,7 @@ from django.conf import settings
 from rdflib import (
     Graph, URIRef, Literal,
     # namespaces:
-    DC, PROV, RDF, FOAF, SDO, DOAP,
+    DC, PROV, RDF, FOAF, SDO, DOAP, SOSA, ORG,
 )
 
 
@@ -29,6 +29,9 @@ class MetaModel(models.Model):
         if serialize:
             return graph.serialize(format=settings.GLOBAL_GRAPH_IO_FORMAT)
         return graph
+
+    def __str__(self):
+        return self.label
 
 
 class Person(MetaModel):
@@ -73,9 +76,6 @@ class Person(MetaModel):
             return graph.serialize(format=format)
         return graph
 
-    def __str__(self):
-        return self.get_rdf_representation()
-
 
 class Organization(MetaModel):
     website = models.URLField(blank=True, null=True)
@@ -97,18 +97,25 @@ class Organization(MetaModel):
             return graph.serialize(format=format)
         return graph
 
-    def __str__(self):
-        return self.get_rdf_representation()
-
 
 class Project(MetaModel):
     website = models.URLField(blank=True, null=True)
     repository = models.URLField(blank=True, null=True)
+    organizations = models.ManyToManyField(
+        "Organization", blank=True, related_name='organizations')
+    isHostedByOrganizations = models.ManyToManyField(
+        "Organization", blank=True)
+    isHostedByPersons = models.ManyToManyField(
+        "Person", related_name='isHostedByPersons', blank=True)
+    hasMembers = models.ManyToManyField(
+        "Person", blank=True)
 
     def get_uri(self):
         return URIRef(os.path.join(settings.GLOBAL_API_ACCOUNT_PROJECT_URL, str(self.id)))
 
-    def get_rdf_representation(self, serialize: bool = True, format: str = settings.GLOBAL_GRAPH_IO_FORMAT):
+    def get_rdf_representation(
+        self, serialize: bool = True, format: str = settings.GLOBAL_GRAPH_IO_FORMAT
+    ):
         entity = FOAF.Project
         graph = Graph()
         uri = self.get_uri()
@@ -120,9 +127,22 @@ class Project(MetaModel):
             graph.add((uri, FOAF.workInfoHomepage, Literal(self.website)))
         if self.repository:
             graph.add((uri, DOAP.repository, Literal(self.repository)))
+        for organization in self.organizations.all():
+            graph.parse(data=organization.get_rdf_representation(),
+                        format=settings.GLOBAL_GRAPH_IO_FORMAT)
+            graph.add((uri, DC.relation, organization.get_uri()))
+        for organization in self.isHostedByOrganizations.all():
+            graph.parse(data=organization.get_rdf_representation(),
+                        format=settings.GLOBAL_GRAPH_IO_FORMAT)
+            graph.add((uri, SOSA.isHostedBy, organization.get_uri()))
+        for person in self.isHostedByPersons.all():
+            graph.parse(data=person.get_rdf_representation(),
+                        format=settings.GLOBAL_GRAPH_IO_FORMAT)
+            graph.add((uri, SOSA.isHostedBy, organization.get_uri()))
+        for person in self.hasMembers.all():
+            graph.parse(data=person.get_rdf_representation(),
+                        format=settings.GLOBAL_GRAPH_IO_FORMAT)
+            graph.add((uri, ORG.hasMember, person.get_uri()))
         if serialize:
             return graph.serialize(format=format)
         return graph
-
-    def __str__(self):
-        return self.get_rdf_representation()

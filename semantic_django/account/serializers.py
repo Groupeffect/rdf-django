@@ -3,6 +3,10 @@ from rest_framework import serializers, reverse
 from . import models
 
 
+def uri_builder(name, obj):
+    return f"{settings.GLOBAL_HOST_URL}{reverse.reverse(str(name)+'-detail', kwargs={'pk': obj.id})}"
+
+
 class MetaModelSerializer(serializers.ModelSerializer):
     rdf = serializers.SerializerMethodField(read_only=True)
 
@@ -29,7 +33,7 @@ class PersonSerializer(MetaModelSerializer):
         ]
 
     def get_uri(self, obj):
-        return f"{settings.GLOBAL_HOST_URL}{reverse.reverse('person-detail', kwargs={'pk': obj.id})}"
+        return uri_builder('person', obj)
 
 
 class PersonRDFSerializer(MetaModelSerializer):
@@ -53,8 +57,7 @@ class OrganizationSerializer(MetaModelSerializer):
         ]
 
     def get_uri(self, obj):
-
-        return reverse.reverse('organization-detail', kwargs={"pk": obj.id})
+        return uri_builder('organization', obj)
 
 
 class OrganizationRDFSerializer(MetaModelSerializer):
@@ -76,11 +79,11 @@ class ProjectSerializer(MetaModelSerializer):
             "website",
             "description",
             "repository",
+            "organizations",
         ]
 
     def get_uri(self, obj):
-
-        return reverse.reverse('project-detail', kwargs={"pk": obj.id})
+        return uri_builder('project', obj)
 
 
 class ProjectRDFSerializer(MetaModelSerializer):
