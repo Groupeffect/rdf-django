@@ -4,7 +4,7 @@ from django.conf import settings
 from rdflib import (
     Graph, URIRef, Literal,
     # namespaces:
-    DC, PROV, RDF, FOAF, SDO, DOAP, SOSA, ORG,
+    DC, PROV, RDF, FOAF, SDO, DOAP, SOSA, ORG, SDO,
 )
 
 
@@ -120,6 +120,12 @@ class Project(MetaModel):
         "Organization", blank=True, related_name='organizations')
     isHostedByOrganizations = models.ManyToManyField(
         "Organization", blank=True)
+    readPermissions = models.ManyToManyField(
+        'Person', related_name="readPermission", blank=True)
+    writePermissions = models.ManyToManyField(
+        'Person', related_name="writePermission", blank=True)
+    deletePermissions = models.ManyToManyField(
+        'Person', related_name="deletePermission", blank=True)
 
     def get_uri(self):
         return URIRef(os.path.join(settings.GLOBAL_API_ACCOUNT_PROJECT_URL, str(self.id)))
@@ -146,7 +152,12 @@ class Project(MetaModel):
             graph.parse(data=organization.get_rdf_representation(),
                         format=settings.GLOBAL_GRAPH_IO_FORMAT)
             graph.add((uri, SOSA.isHostedBy, organization.get_uri()))
-
+        for person in self.readPermissions.all():
+            graph.add((person.get_uri(), SDO.ReadPermission, uri))
+        for person in self.writePermissions.all():
+            graph.add((person.get_uri(), SDO.WritePermission, uri))
+        for person in self.deletePermissions.all():
+            graph.add((person.get_uri(), SDO.DeleteAction, uri))
         if serialize:
             return graph.serialize(format=format)
         return graph

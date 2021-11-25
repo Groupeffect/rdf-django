@@ -83,6 +83,9 @@ class ProjectSerializer(MetaModelSerializer):
             "repository",
             "organizations",
             "isHostedByOrganizations",
+            "readPermissions",
+            "writePermissions",
+            "deletePermissions",
         ]
 
     def get_uri(self, obj):
