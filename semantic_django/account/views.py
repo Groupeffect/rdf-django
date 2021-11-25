@@ -49,7 +49,8 @@ class MetaModelViewset(viewsets.ModelViewSet):
         graph = self.info_graph()
         if request.GET.get('format') == "xml":
             for instance in data:
-                graph.parse(data=instance['rdf'], format=settings.GLOBAL_GRAPH_IO_FORMAT, )
+                graph.parse(
+                    data=instance['rdf'], format=settings.GLOBAL_GRAPH_IO_FORMAT, )
             result.data = graph.serialize(format="xml")
         return result
 
@@ -89,4 +90,20 @@ class OrganizationModelViewSet(MetaModelViewset):
     def get_serializer_class(self):
         if self.request.GET.get('format') == "xml":
             return serializers.OrganizationRDFSerializer
+        return self.serializer_class
+
+
+class ProjectModelViewSet(MetaModelViewset):
+
+    serializer_class = serializers.ProjectSerializer
+    queryset = models.Project.objects.all()
+    renderer_classes = [
+        renderers.BrowsableAPIRenderer,
+        renderers.JSONRenderer,
+        StaticXmlRenderer
+    ]
+
+    def get_serializer_class(self):
+        if self.request.GET.get('format') == "xml":
+            return serializers.ProjectRDFSerializer
         return self.serializer_class

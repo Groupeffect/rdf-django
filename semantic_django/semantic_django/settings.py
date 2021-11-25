@@ -32,8 +32,12 @@ ENVS = environ.Env(
 )
 GLOBAL_GRAPH_IO_FORMAT = ENVS.str('DJANGO_GLOBAL_GRAPH_IO_FORMAT')
 GLOBAL_HOST_URL = ENVS.str('DJANGO_GLOBAL_HOST_URL')
-GLOBAL_API_ACCOUNT_PERSON_URL = os.path.join(GLOBAL_HOST_URL, 'api', 'account', 'person')
-GLOBAL_API_ACCOUNT_ORGANIZATION_URL = os.path.join(GLOBAL_HOST_URL, 'api', 'account', 'organization')
+GLOBAL_API_ACCOUNT_PERSON_URL = os.path.join(
+    GLOBAL_HOST_URL, 'api', 'account', 'person')
+GLOBAL_API_ACCOUNT_ORGANIZATION_URL = os.path.join(
+    GLOBAL_HOST_URL, 'api', 'account', 'organization')
+GLOBAL_API_ACCOUNT_PROJECT_URL = os.path.join(
+    GLOBAL_HOST_URL, 'api', 'account', 'project')
 
 
 # SECURITY WARNING: don't run with debug turned on in production!

@@ -25,6 +25,7 @@ class PersonSerializer(MetaModelSerializer):
             "description",
             "organizations",
             "employedAt",
+            "projects",
         ]
 
     def get_uri(self, obj):
@@ -59,4 +60,30 @@ class OrganizationSerializer(MetaModelSerializer):
 class OrganizationRDFSerializer(MetaModelSerializer):
     class Meta:
         model = models.Organization
+        fields = ["rdf", ]
+
+
+class ProjectSerializer(MetaModelSerializer):
+
+    uri = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = models.Project
+        fields = [
+            "id",
+            "uri",
+            "label",
+            "website",
+            "description",
+            "repository",
+        ]
+
+    def get_uri(self, obj):
+
+        return reverse.reverse('project-detail', kwargs={"pk": obj.id})
+
+
+class ProjectRDFSerializer(MetaModelSerializer):
+    class Meta:
+        model = models.Project
         fields = ["rdf", ]

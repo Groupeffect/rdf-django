@@ -3,6 +3,8 @@ from . import views
 
 router = DefaultRouter()
 router.register('person', views.PersonModelViewSet, basename="person")
-router.register('organization', views.OrganizationModelViewSet, basename="organization")
+router.register('organization', views.OrganizationModelViewSet,
+                basename="organization")
+router.register('project', views.ProjectModelViewSet, basename="project")
 
 urlpatterns = router.urls
