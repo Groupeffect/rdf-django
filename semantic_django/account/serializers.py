@@ -80,6 +80,8 @@ class ProjectSerializer(MetaModelSerializer):
             "description",
             "repository",
             "organizations",
+            "isHostedByOrganizations",
+            "isHostedByPersons",
         ]
 
     def get_uri(self, obj):
