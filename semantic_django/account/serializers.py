@@ -30,6 +30,8 @@ class PersonSerializer(MetaModelSerializer):
             "organizations",
             "employedAt",
             "projects",
+            "isHostOfProjects",
+            "memberOfProjects",
         ]
 
     def get_uri(self, obj):
@@ -81,7 +83,6 @@ class ProjectSerializer(MetaModelSerializer):
             "repository",
             "organizations",
             "isHostedByOrganizations",
-            "isHostedByPersons",
         ]
 
     def get_uri(self, obj):

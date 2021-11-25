@@ -40,7 +40,11 @@ class Person(MetaModel):
     lastName = models.CharField(max_length=100, blank=True, null=True)
     employedAt = models.ManyToManyField(
         "Organization", related_name="employedAt", blank=True)
-    projects = models.ManyToManyField('Project', blank=True)
+    projects = models.ManyToManyField(
+        'Project', related_name="projects", blank=True)
+    isHostOfProjects = models.ManyToManyField('Project', blank=True)
+    memberOfProjects = models.ManyToManyField(
+        'Project', related_name="memberOf", blank=True)
 
     def get_uri(self):
         return URIRef(os.path.join(settings.GLOBAL_API_ACCOUNT_PERSON_URL, str(self.id)))
@@ -52,6 +56,7 @@ class Person(MetaModel):
         graph.parse(data=self.get_rdf_description(),
                     format=settings.GLOBAL_GRAPH_IO_FORMAT)
         graph.add((uri, RDF.type, entity))
+
         if self.firstName:
             graph.add((uri, FOAF.firstName, Literal(self.firstName)))
         if self.lastName:
@@ -70,7 +75,17 @@ class Person(MetaModel):
         for project in self.projects.all():
             graph.parse(data=project.get_rdf_representation(),
                         format=settings.GLOBAL_GRAPH_IO_FORMAT)
-            graph.add((uri, FOAF.member, project.get_uri()))
+            graph.add((uri, DC.relation, project.get_uri()))
+
+        for project in self.isHostOfProjects.all():
+            graph.parse(data=project.get_rdf_representation(),
+                        format=settings.GLOBAL_GRAPH_IO_FORMAT)
+            graph.add((project.get_uri(), SOSA.isHostedBy, uri))
+
+        for project in self.memberOfProjects.all():
+            graph.parse(data=project.get_rdf_representation(),
+                        format=settings.GLOBAL_GRAPH_IO_FORMAT)
+            graph.add((uri, ORG.memberOf, project.get_uri()))
 
         if serialize:
             return graph.serialize(format=format)
@@ -105,8 +120,6 @@ class Project(MetaModel):
         "Organization", blank=True, related_name='organizations')
     isHostedByOrganizations = models.ManyToManyField(
         "Organization", blank=True)
-    isHostedByPersons = models.ManyToManyField(
-        "Person", related_name='isHostedByPersons', blank=True)
 
     def get_uri(self):
         return URIRef(os.path.join(settings.GLOBAL_API_ACCOUNT_PROJECT_URL, str(self.id)))
@@ -133,10 +146,6 @@ class Project(MetaModel):
             graph.parse(data=organization.get_rdf_representation(),
                         format=settings.GLOBAL_GRAPH_IO_FORMAT)
             graph.add((uri, SOSA.isHostedBy, organization.get_uri()))
-        for person in self.isHostedByPersons.all():
-            graph.parse(data=person.get_rdf_representation(),
-                        format=settings.GLOBAL_GRAPH_IO_FORMAT)
-            graph.add((uri, SOSA.isHostedBy, person.get_uri()))
 
         if serialize:
             return graph.serialize(format=format)
