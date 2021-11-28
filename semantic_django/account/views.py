@@ -1,6 +1,7 @@
 from rdflib import Graph
 from django.conf import settings
-from rest_framework import viewsets, renderers
+from rest_framework import viewsets, renderers, filters
+from django_filters.rest_framework import DjangoFilterBackend
 from . import serializers
 from . import models
 
@@ -21,6 +22,7 @@ class MetaModelViewset(viewsets.ModelViewSet):
         renderers.JSONRenderer,
         StaticXmlRenderer
     ]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
 
     def info_graph(self):
         graph = Graph()
@@ -48,6 +50,7 @@ class PersonModelViewSet(MetaModelViewset):
 
     serializer_class = serializers.PersonSerializer
     queryset = models.Person.objects.all()
+    search_fields = ['label', 'firstName', 'lastName']
 
     def get_serializer_class(self):
         if self.request.GET.get('format') == "xml":
@@ -61,6 +64,7 @@ class OrganizationModelViewSet(MetaModelViewset):
 
     serializer_class = serializers.OrganizationSerializer
     queryset = models.Organization.objects.all()
+    search_fields = ['label']
 
     def get_serializer_class(self):
         if self.request.GET.get('format') == "xml":
@@ -72,6 +76,7 @@ class ProjectModelViewSet(MetaModelViewset):
 
     serializer_class = serializers.ProjectSerializer
     queryset = models.Project.objects.all()
+    search_fields = ['label']
 
     def get_serializer_class(self):
         if self.request.GET.get('format') == "xml":
@@ -86,6 +91,7 @@ class SkillCategoryViewSet(MetaModelViewset):
 
     queryset = models.Skill.objects.all()
     serializer_class = serializers.SkillCategorySerializer
+    search_fields = ['value']
 
     def get_serializer_class(self):
         if self.request.GET.get('format') == "xml":
@@ -97,6 +103,7 @@ class CategoryViewSet(MetaModelViewset):
 
     queryset = models.Category.objects.all()
     serializer_class = serializers.CategorySerializer
+    search_fields = ['value']
 
     def get_serializer_class(self):
         if self.request.GET.get('format') == "xml":
