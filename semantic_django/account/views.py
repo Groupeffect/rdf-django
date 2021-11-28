@@ -16,31 +16,14 @@ class StaticXmlRenderer(renderers.StaticHTMLRenderer):
 
 
 class MetaModelViewset(viewsets.ModelViewSet):
+    renderer_classes = [
+        renderers.BrowsableAPIRenderer,
+        renderers.JSONRenderer,
+        StaticXmlRenderer
+    ]
 
     def info_graph(self):
         graph = Graph()
-
-        # namespace = str(self.__class__).split("'")[1]
-        # result = Nested()
-        # result.appname = Literal(f"#{namespace.split('.')[2]}")
-        # result.viewname = Literal(f"#{namespace.split('.')[1]}")
-        # result.appuri = URIRef(result.appname)
-        # result.viewuri = URIRef(result.viewname)
-        # result.organizationuri = URIRef('Organization')
-        # result.personuri = URIRef('Person')
-
-        # graph.add((result.personuri, RDF.type, PROV.Person))
-        # graph.add((result.organizationuri, RDF.type, PROV.Organization))
-
-        # graph.add((PROV.Organization, DC.relation, PROV.Person))
-        # graph.add((PROV.Organization, DC.description, Literal('can have employees and general relations to persons')))
-        # graph.add((PROV.Organization, FOAF.name, Literal('Organization')))
-        # graph.add((PROV.Organization, DC.identifier, Literal('Organization')))
-        # graph.add((PROV.Person, SDO.employee ,PROV.Organization))
-        # graph.add((PROV.Person, FOAF.name ,Literal('Person')))
-    # graph.add((PROV.Person, DC.description, Literal('can be employed at organization or have a general relation')))
-        # graph.add((PROV.Person, DC.identifier, Literal('Person')))
-
         return graph
 
     def list(self, request, **kwargs):
@@ -65,15 +48,12 @@ class PersonModelViewSet(MetaModelViewset):
 
     serializer_class = serializers.PersonSerializer
     queryset = models.Person.objects.all()
-    renderer_classes = [
-        renderers.BrowsableAPIRenderer,
-        renderers.JSONRenderer,
-        StaticXmlRenderer
-    ]
 
     def get_serializer_class(self):
         if self.request.GET.get('format') == "xml":
             return serializers.PersonRDFSerializer
+        if self.action in ['list', 'retrieve', ]:
+            return serializers.PersonReadSerializer
         return self.serializer_class
 
 
@@ -81,11 +61,6 @@ class OrganizationModelViewSet(MetaModelViewset):
 
     serializer_class = serializers.OrganizationSerializer
     queryset = models.Organization.objects.all()
-    renderer_classes = [
-        renderers.BrowsableAPIRenderer,
-        renderers.JSONRenderer,
-        StaticXmlRenderer
-    ]
 
     def get_serializer_class(self):
         if self.request.GET.get('format') == "xml":
@@ -97,13 +72,33 @@ class ProjectModelViewSet(MetaModelViewset):
 
     serializer_class = serializers.ProjectSerializer
     queryset = models.Project.objects.all()
-    renderer_classes = [
-        renderers.BrowsableAPIRenderer,
-        renderers.JSONRenderer,
-        StaticXmlRenderer
-    ]
 
     def get_serializer_class(self):
         if self.request.GET.get('format') == "xml":
             return serializers.ProjectRDFSerializer
+
+        if self.action in ['list', 'retrieve', ]:
+            return serializers.ProjectReadSerializer
+        return self.serializer_class
+
+
+class SkillCategoryViewSet(MetaModelViewset):
+
+    queryset = models.Skill.objects.all()
+    serializer_class = serializers.SkillCategorySerializer
+
+    def get_serializer_class(self):
+        if self.request.GET.get('format') == "xml":
+            return serializers.SkillRDFSerializer
+        return self.serializer_class
+
+
+class CategoryViewSet(MetaModelViewset):
+
+    queryset = models.Category.objects.all()
+    serializer_class = serializers.CategorySerializer
+
+    def get_serializer_class(self):
+        if self.request.GET.get('format') == "xml":
+            return serializers.CategoryRDFSerializer
         return self.serializer_class

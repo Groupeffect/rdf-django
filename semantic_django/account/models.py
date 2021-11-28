@@ -34,6 +34,67 @@ class MetaModel(models.Model):
         return self.label
 
 
+class Category(MetaModel):
+    value = models.CharField(max_length=120, blank=True, null=True)
+
+    def __str__(self):
+        return self.value
+
+    def get_uri(self):
+        return URIRef(os.path.join(settings.GLOBAL_API_ACCOUNT_CATEGORY_URL, str(self.id)))
+
+    def get_rdf_representation(self, serialize: bool = True, format: str = settings.GLOBAL_GRAPH_IO_FORMAT):
+        entity = DOAP.category
+        graph = Graph()
+        uri = self.get_uri()
+        graph.parse(data=self.get_rdf_description(),
+                    format=settings.GLOBAL_GRAPH_IO_FORMAT)
+        graph.add((uri, RDF.type, entity))
+
+        if serialize:
+            return graph.serialize(format=format)
+        return graph
+
+
+class Skill(MetaModel):
+    value = models.CharField(max_length=120, blank=True, null=True)
+    category = models.ForeignKey(
+        Category, on_delete=models.DO_NOTHING, blank=True, null=True)
+
+    def __str__(self):
+        return self.value
+
+    def get_uri(self):
+        return URIRef(os.path.join(settings.GLOBAL_API_ACCOUNT_SKILL_URL, str(self.id)))
+
+    def get_rdf_representation(self, serialize: bool = True, format: str = settings.GLOBAL_GRAPH_IO_FORMAT):
+        entity = PROV.Attribution
+        graph = Graph()
+        uri = self.get_uri()
+        graph.parse(data=self.get_rdf_description(),
+                    format=settings.GLOBAL_GRAPH_IO_FORMAT)
+        graph.add((uri, RDF.type, entity))
+        graph.parse(data=self.category.get_rdf_representation(),
+                    format=settings.GLOBAL_GRAPH_IO_FORMAT)
+        graph.add((uri, DOAP.category, self.category.get_uri()))
+        graph.add((uri, FOAF.name, Literal(self.value)))
+
+        if serialize:
+            return graph.serialize(format=format)
+        return graph
+
+
+class Website(models.Model):
+    organizations = models.ManyToManyField(
+        "Organization", blank=True, related_name='organization_websites')
+    persons = models.ManyToManyField(
+        "Person", blank=True, related_name='persons')
+    website = models.URLField(blank=True, null=True)
+
+    def __str__(self) -> str:
+        return self.website
+
+
 class Person(MetaModel):
     organizations = models.ManyToManyField("Organization", blank=True)
     firstName = models.CharField(max_length=100, blank=True, null=True)
@@ -45,6 +106,9 @@ class Person(MetaModel):
     isHostOfProjects = models.ManyToManyField('Project', blank=True)
     memberOfProjects = models.ManyToManyField(
         'Project', related_name="memberOf", blank=True)
+    website = models.URLField(blank=True, null=True)
+    websites = models.ManyToManyField('Website', blank=True)
+    skills = models.ManyToManyField(Skill, blank=True)
 
     def get_uri(self):
         return URIRef(os.path.join(settings.GLOBAL_API_ACCOUNT_PERSON_URL, str(self.id)))
@@ -87,6 +151,11 @@ class Person(MetaModel):
                         format=settings.GLOBAL_GRAPH_IO_FORMAT)
             graph.add((uri, ORG.memberOf, project.get_uri()))
 
+        for skill in self.skills.all():
+            graph.parse(data=skill.get_rdf_representation(),
+                        format=settings.GLOBAL_GRAPH_IO_FORMAT)
+            graph.add((uri, SDO.skills, skill.get_uri()))
+
         if serialize:
             return graph.serialize(format=format)
         return graph
@@ -94,6 +163,8 @@ class Person(MetaModel):
 
 class Organization(MetaModel):
     website = models.URLField(blank=True, null=True)
+    websites = models.ManyToManyField('Website', blank=True)
+    skills = models.ManyToManyField(Skill, related_name='skills', blank=True)
 
     def get_uri(self):
         return URIRef(os.path.join(settings.GLOBAL_API_ACCOUNT_ORGANIZATION_URL, str(self.id)))
@@ -127,6 +198,8 @@ class Project(MetaModel):
     deletePermissions = models.ManyToManyField(
         'Person', related_name="deletePermission", blank=True)
 
+    skills = models.ManyToManyField(Skill, blank=True)
+
     def get_uri(self):
         return URIRef(os.path.join(settings.GLOBAL_API_ACCOUNT_PROJECT_URL, str(self.id)))
 
@@ -158,6 +231,8 @@ class Project(MetaModel):
             graph.add((person.get_uri(), SDO.WritePermission, uri))
         for person in self.deletePermissions.all():
             graph.add((person.get_uri(), SDO.DeleteAction, uri))
+        for skill in self.skills.all():
+            graph.add((uri, DC.relation, skill.get_uri()))
         if serialize:
             return graph.serialize(format=format)
         return graph

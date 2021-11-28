@@ -38,7 +38,10 @@ GLOBAL_API_ACCOUNT_ORGANIZATION_URL = os.path.join(
     GLOBAL_HOST_URL, 'api', 'account', 'organization')
 GLOBAL_API_ACCOUNT_PROJECT_URL = os.path.join(
     GLOBAL_HOST_URL, 'api', 'account', 'project')
-
+GLOBAL_API_ACCOUNT_CATEGORY_URL = os.path.join(
+    GLOBAL_HOST_URL, 'api', 'account', 'category')
+GLOBAL_API_ACCOUNT_SKILL_URL = os.path.join(
+    GLOBAL_HOST_URL, 'api', 'account', 'skill')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = ENVS.bool('DJANGO_DEBUG')
