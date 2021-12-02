@@ -11,6 +11,7 @@ Http CRUD methods are made with rest_framework.
     djangorestframework
     rdflib
     django-environ
+    django-filter
 
 ## Installation
 
