@@ -33,7 +33,7 @@ class MetaModelViewset(viewsets.ModelViewSet):
         data = result.data
         graph = self.info_graph()
         if request.GET.get('format') == "xml":
-            for instance in data:
+            for instance in data['results']:
                 graph.parse(
                     data=instance['rdf'], format=settings.GLOBAL_GRAPH_IO_FORMAT, )
             result.data = graph.serialize(format="xml")

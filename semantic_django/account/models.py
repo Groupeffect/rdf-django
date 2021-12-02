@@ -106,12 +106,32 @@ class Person(MetaModel):
     isHostOfProjects = models.ManyToManyField('Project', blank=True)
     memberOfProjects = models.ManyToManyField(
         'Project', related_name="memberOf", blank=True)
-    website = models.URLField(blank=True, null=True)
+    website = models.URLField(
+        default="http://localhost:8000/", blank=True, null=True)
     websites = models.ManyToManyField('Website', blank=True)
     skills = models.ManyToManyField(Skill, blank=True)
 
     def get_uri(self):
         return URIRef(os.path.join(settings.GLOBAL_API_ACCOUNT_PERSON_URL, str(self.id)))
+
+    def get_rdf_flat_representation(self, serialize: bool = True, format: str = settings.GLOBAL_GRAPH_IO_FORMAT,):
+        entity = PROV.Person
+        graph = Graph()
+        uri = self.get_uri()
+        graph.parse(data=self.get_rdf_description(),
+                    format=settings.GLOBAL_GRAPH_IO_FORMAT)
+        graph.add((uri, RDF.type, entity))
+
+        if self.firstName:
+            graph.add((uri, FOAF.firstName, Literal(self.firstName)))
+        if self.lastName:
+            graph.add((uri, FOAF.lastName, Literal(self.lastName)))
+        if self.website:
+            graph.add((uri, FOAF.weblog, Literal(self.website)))
+
+        if serialize:
+            return graph.serialize(format=format)
+        return graph
 
     def get_rdf_representation(self, serialize: bool = True, format: str = settings.GLOBAL_GRAPH_IO_FORMAT):
         entity = PROV.Person

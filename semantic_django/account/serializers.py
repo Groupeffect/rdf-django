@@ -1,5 +1,4 @@
 from django.conf import settings
-from django.db.models import fields
 from rest_framework import serializers, reverse
 from . import models
 
@@ -114,6 +113,12 @@ class PersonRDFSerializer(MetaModelSerializer):
     class Meta:
         model = models.Person
         fields = ["rdf", ]
+
+    def get_rdf(self, obj):
+        param = self.context['request'].GET.get('param')
+        if param == 'flat':
+            return obj.get_rdf_flat_representation()
+        return obj.get_rdf_representation()
 
 
 class OrganizationSerializer(MetaModelSerializer):
