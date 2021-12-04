@@ -27,6 +27,10 @@ Http CRUD methods are made with rest_framework.
     http://localhost:8000/api/account/
 
 ### json:
+    query params: 
+    - format=json
+    - limit=10
+    - search=abc
 
     GET, POST, PUT, PATCH, DELETE, OPTIONS
     http://localhost:8000/api/account/person/?format=json
@@ -35,16 +39,30 @@ Http CRUD methods are made with rest_framework.
     http://localhost:8000/api/account/organization/{pk}/?format=json
     http://localhost:8000/api/account/project/?format=json
     http://localhost:8000/api/account/project/{pk}/?format=json
+    http://localhost:8000/api/account/skill/
+    http://localhost:8000/api/account/website/
+
+    ... more
 
 ### xml:
-
+    query params: 
+    - format=xml
+    - param=flat (only for person)
+    - limit=10
+    - search=abc
+    - include=person (only for skills)
+    
     GET
-    http://localhost:8000/api/account/person/?format=xml
+    http://localhost:8000/api/account/person/?format=xml&param=flat
     http://localhost:8000/api/account/person/{pk}/?format=xml
     http://localhost:8000/api/account/organization/?format=xml
     http://localhost:8000/api/account/organization/{pk}/?format=xml
     http://localhost:8000/api/account/project/?format=xml
     http://localhost:8000/api/account/project/{pk}/?format=xml
+    http://localhost:8000/api/account/skill/
+    http://localhost:8000/api/account/website/
+    
+    ... more
 
 
 ## Ontologies

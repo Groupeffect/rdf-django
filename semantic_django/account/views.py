@@ -24,6 +24,11 @@ class MetaModelViewset(viewsets.ModelViewSet):
     ]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['action'] = self.action
+        return context
+
     def info_graph(self):
         graph = Graph()
         return graph
@@ -50,7 +55,7 @@ class PersonModelViewSet(MetaModelViewset):
 
     serializer_class = serializers.PersonSerializer
     queryset = models.Person.objects.all()
-    search_fields = ['label', 'firstName', 'lastName']
+    search_fields = ['label', 'firstName', 'lastName', 'skills__value']
 
     def get_serializer_class(self):
         if self.request.GET.get('format') == "xml":
@@ -87,15 +92,17 @@ class ProjectModelViewSet(MetaModelViewset):
         return self.serializer_class
 
 
-class SkillCategoryViewSet(MetaModelViewset):
+class SkillViewSet(MetaModelViewset):
 
     queryset = models.Skill.objects.all()
-    serializer_class = serializers.SkillCategorySerializer
+    serializer_class = serializers.SkillSerializer
     search_fields = ['value']
 
     def get_serializer_class(self):
         if self.request.GET.get('format') == "xml":
             return serializers.SkillRDFSerializer
+        if self.action in ['list', 'retrieve', ]:
+            return serializers.SkillReadSerializer
         return self.serializer_class
 
 
@@ -108,4 +115,16 @@ class CategoryViewSet(MetaModelViewset):
     def get_serializer_class(self):
         if self.request.GET.get('format') == "xml":
             return serializers.CategoryRDFSerializer
+        return self.serializer_class
+
+
+class WebsiteViewSet(MetaModelViewset):
+
+    queryset = models.Website.objects.all()
+    serializer_class = serializers.WebsiteSerializer
+    search_fields = ['value', 'person__label', 'organization__label']
+
+    def get_serializer_class(self):
+        if self.request.GET.get('format') == "xml":
+            return serializers.WebsiteRDFSerializer
         return self.serializer_class
