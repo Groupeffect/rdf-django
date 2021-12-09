@@ -166,6 +166,29 @@ class Skill(MetaModel):
     def get_uri(self):
         return URIRef(os.path.join(settings.GLOBAL_API_ACCOUNT_SKILL_URL, str(self.id)))
 
+    def get_rdf_flat_representation(
+            self, serialize: bool = True, format: str = settings.GLOBAL_GRAPH_IO_FORMAT,
+            exclude_persons: bool = True):
+
+        entity = PROV.Activity
+        graph = Graph()
+        uri = self.get_uri()
+
+        graph.parse(data=self.get_rdf_description(),
+                    format=settings.GLOBAL_GRAPH_IO_FORMAT)
+        graph.add((uri, RDF.type, entity))
+
+        graph.parse(data=self.category.get_rdf_representation(),
+                    format=settings.GLOBAL_GRAPH_IO_FORMAT)
+        graph.add((uri, DOAP.category, self.category.get_uri()))
+        graph.add((uri, FOAF.name, Literal(self.value)))
+        graph.parse(data=self.create_uri(graph, uri),
+                    format=settings.GLOBAL_GRAPH_IO_FORMAT)
+
+        if serialize:
+            return graph.serialize(format=format)
+        return graph
+
     def get_rdf_representation(
             self, serialize: bool = True, format: str = settings.GLOBAL_GRAPH_IO_FORMAT,
             exclude_persons: bool = True):
