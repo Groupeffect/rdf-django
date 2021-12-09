@@ -74,6 +74,8 @@ class OrganizationModelViewSet(MetaModelViewset):
     def get_serializer_class(self):
         if self.request.GET.get('format') == "xml":
             return serializers.OrganizationRDFSerializer
+        if self.action in ['list', 'retrieve', ]:
+            return serializers.OrganizationReadSerializer
         return self.serializer_class
 
 

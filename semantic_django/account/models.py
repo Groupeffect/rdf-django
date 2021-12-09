@@ -1,3 +1,4 @@
+from enum import unique
 import os
 from django.core.validators import RegexValidator
 from django.db import models
@@ -5,14 +6,15 @@ from django.conf import settings
 from rdflib import (
     Graph, URIRef, Literal,
     # namespaces:
-    DC, PROV, RDF, FOAF, SDO, DOAP, SOSA, ORG,
+    DC, PROV, RDF, FOAF, SDO, DOAP, SOSA, ORG, graph,
 )
-
+GLOBAL_EXCLUDE_LIST = ["persons", ]
 alphanumeric = RegexValidator(
     r'^[0-9a-zA-Z]*$', 'Only alphanumeric characters are allowed.')
 
 
 class MetaModel(models.Model):
+    unique_label = models.TextField(blank=True)
     label = models.CharField(max_length=100, default='no_label_set')
     description = models.TextField(default='no_desription')
     unification = models.CharField(
@@ -20,11 +22,15 @@ class MetaModel(models.Model):
     groupby = models.CharField(
         default='groupby',
         blank=True, null=True, max_length=100, validators=[alphanumeric])
+    categories = models.ManyToManyField(
+        'Category', related_name="categries", blank=True, null=True)
+    websites = models.ManyToManyField(
+        'Website', related_name="websites", blank=True)
 
     class Meta:
         abstract = True
 
-    def get_unique_uri(self, graph, uri=None, base_uri=None, serialize=True):
+    def create_uri(self, graph, uri=None, base_uri=None, serialize=True):
 
         if not base_uri:
             base_uri = os.path.join(settings.GLOBAL_HOST_URL, 'api', 'account')
@@ -64,6 +70,48 @@ class MetaModel(models.Model):
             return graph.serialize(format=settings.GLOBAL_GRAPH_IO_FORMAT)
         return graph
 
+    def get_rdf_websites(self, exclude=GLOBAL_EXCLUDE_LIST, serialize=True):
+        graph = Graph()
+        uri = self.get_uri()
+
+        if hasattr(self, 'websites') and "websites" not in exclude:
+
+            for website in self.websites.all():
+                graph.parse(data=website.get_rdf_representation(),
+                            format=settings.GLOBAL_GRAPH_IO_FORMAT)
+                graph.add((uri, FOAF.weblog, website.get_uri()))
+
+        if serialize:
+            return graph.serialize(format=settings.GLOBAL_GRAPH_IO_FORMAT)
+        return graph
+
+    def get_rdf_persons(self, exclude=GLOBAL_EXCLUDE_LIST, serialize=True):
+        graph = Graph()
+        uri = self.get_uri()
+
+        if hasattr(self, "persons") and "persons" not in exclude:
+            for person in self.persons.all():
+                graph.parse(data=person.get_rdf_flat_representation(),
+                            format=settings.GLOBAL_GRAPH_IO_FORMAT)
+                graph.add((uri, DC.relation, person.get_uri()))
+        if serialize:
+            return graph.serialize(format=settings.GLOBAL_GRAPH_IO_FORMAT)
+        return graph
+
+    def get_rdf_categories(self, exclude=GLOBAL_EXCLUDE_LIST, serialize=True):
+        graph = Graph()
+        uri = self.get_uri()
+
+        if hasattr(self, "categories") and "categories" not in exclude:
+            for category in self.categories.all():
+                graph.parse(data=category.get_rdf_flat_representation(),
+                            format=settings.GLOBAL_GRAPH_IO_FORMAT)
+                graph.add((uri, DC.relation, category.get_uri()))
+
+        if serialize:
+            return graph.serialize(format=settings.GLOBAL_GRAPH_IO_FORMAT)
+        return graph
+
     def __str__(self):
         return self.label
 
@@ -76,6 +124,18 @@ class Category(MetaModel):
 
     def get_uri(self):
         return URIRef(os.path.join(settings.GLOBAL_API_ACCOUNT_CATEGORY_URL, str(self.id)))
+
+    def get_rdf_flat_representation(self, serialize: bool = True, format: str = settings.GLOBAL_GRAPH_IO_FORMAT):
+        entity = PROV.Collection
+        graph = Graph()
+        uri = self.get_uri()
+        graph.parse(data=self.get_rdf_description(),
+                    format=settings.GLOBAL_GRAPH_IO_FORMAT)
+        graph.add((uri, RDF.type, entity))
+
+        if serialize:
+            return graph.serialize(format=format)
+        return graph
 
     def get_rdf_representation(self, serialize: bool = True, format: str = settings.GLOBAL_GRAPH_IO_FORMAT):
         entity = PROV.Collection
@@ -92,10 +152,13 @@ class Category(MetaModel):
 
 class Skill(MetaModel):
     value = models.CharField(max_length=120, blank=True, null=True)
-    category = models.ForeignKey(
-        Category, on_delete=models.DO_NOTHING, blank=True, null=True)
-    websites = models.ManyToManyField(
-        'Website', related_name="websites", blank=True)
+    # category = models.ForeignKey(
+    #     Category, on_delete=models.DO_NOTHING, blank=True, null=True)
+    # websites = models.ManyToManyField(
+    #     'Website', related_name="websites", blank=True)
+
+    class Meta:
+        unique_together = ['unique_label', 'category']
 
     def __str__(self):
         return self.value
@@ -119,19 +182,19 @@ class Skill(MetaModel):
                     format=settings.GLOBAL_GRAPH_IO_FORMAT)
         graph.add((uri, DOAP.category, self.category.get_uri()))
         graph.add((uri, FOAF.name, Literal(self.value)))
-        graph.parse(data=self.get_unique_uri(graph, uri),
+        graph.parse(data=self.create_uri(graph, uri),
                     format=settings.GLOBAL_GRAPH_IO_FORMAT)
 
-        for website in self.websites.all():
-            graph.parse(data=website.get_rdf_representation(),
-                        format=settings.GLOBAL_GRAPH_IO_FORMAT)
-            graph.add((uri, FOAF.weblog, website.get_uri()))
+        # for website in self.websites.all():
+        #     graph.parse(data=website.get_rdf_representation(),
+        #                 format=settings.GLOBAL_GRAPH_IO_FORMAT)
+        #     graph.add((uri, FOAF.weblog, website.get_uri()))
 
-        if not exclude_persons:
-            for person in self.persons.all():
-                graph.parse(data=person.get_rdf_flat_representation(),
-                            format=settings.GLOBAL_GRAPH_IO_FORMAT)
-                graph.add((person.get_uri(), SDO.skills, uri))
+        # if not exclude_persons:
+        #     for person in self.persons.all():
+        #         graph.parse(data=person.get_rdf_flat_representation(),
+        #                     format=settings.GLOBAL_GRAPH_IO_FORMAT)
+        #         graph.add((person.get_uri(), SDO.skills, uri))
 
         if serialize:
             return graph.serialize(format=format)
@@ -151,7 +214,7 @@ class Website(MetaModel):
     def get_uri(self):
         return URIRef(os.path.join(settings.GLOBAL_API_ACCOUNT_WEBSITE_URL, str(self.id)))
 
-    def get_rdf_representation(self, serialize: bool = True, format: str = settings.GLOBAL_GRAPH_IO_FORMAT,):
+    def get_rdf_flat_representation(self, serialize: bool = True, format: str = settings.GLOBAL_GRAPH_IO_FORMAT,):
         entity = SDO.WebSite
         graph = Graph()
         uri = self.get_uri()
@@ -162,15 +225,26 @@ class Website(MetaModel):
         if self.value:
             graph.add((uri, FOAF.weblog, Literal(self.value)))
 
+        if serialize:
+            return graph.serialize(format=format)
+        return graph
+
+    def get_rdf_representation(self, serialize: bool = True, format: str = settings.GLOBAL_GRAPH_IO_FORMAT,):
+        graph = self.get_rdf_flat_representation(serialize=False)
+        uri = self.get_uri()
+
         for organization in self.organizations.all():
             graph.parse(data=organization.get_rdf_representation(),
                         format=settings.GLOBAL_GRAPH_IO_FORMAT)
             graph.add((uri, FOAF.weblog, organization.get_uri()))
 
-        for person in self.persons.all():
-            graph.parse(data=person.get_rdf_flat_representation(),
-                        format=settings.GLOBAL_GRAPH_IO_FORMAT)
-            graph.add((uri, FOAF.weblog, person.get_uri()))
+        # for person in self.persons.all():
+        #     graph.parse(data=person.get_rdf_flat_representation(),
+        #                 format=settings.GLOBAL_GRAPH_IO_FORMAT)
+        #     graph.add((uri, FOAF.weblog, person.get_uri()))
+
+        graph.parse(data=self.get_rdf_persons(exclude=[]),
+                    format=settings.GLOBAL_GRAPH_IO_FORMAT)
 
         if serialize:
             return graph.serialize(format=format)
@@ -178,7 +252,8 @@ class Website(MetaModel):
 
 
 class Person(MetaModel):
-    organizations = models.ManyToManyField("Organization", blank=True)
+    organizations = models.ManyToManyField(
+        "Organization", related_name="persons", blank=True)
     firstName = models.CharField(max_length=100, blank=True, null=True)
     lastName = models.CharField(max_length=100, blank=True, null=True)
     employedAt = models.ManyToManyField(
@@ -287,10 +362,18 @@ class Organization(MetaModel):
         graph.parse(data=self.get_rdf_description(),
                     format=settings.GLOBAL_GRAPH_IO_FORMAT)
         graph.add((uri, entity, Literal(self.label)))
-        graph.parse(data=self.get_unique_uri(graph, uri),
+        graph.parse(data=self.create_uri(graph, uri),
                     format=settings.GLOBAL_GRAPH_IO_FORMAT)
         if self.website:
             graph.add((uri, FOAF.workInfoHomepage, Literal(self.website)))
+        for skill in self.skills.all():
+            graph.parse(data=skill.get_rdf_representation(),
+                        format=settings.GLOBAL_GRAPH_IO_FORMAT)
+            graph.add((uri, SDO.skills, skill.get_uri()))
+        for person in self.persons.all():
+            graph.parse(data=person.get_rdf_flat_representation(),
+                        format=settings.GLOBAL_GRAPH_IO_FORMAT)
+            graph.add((person.get_uri(), FOAF.member, uri))
         if serialize:
             return graph.serialize(format=format)
         return graph

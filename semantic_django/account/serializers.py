@@ -102,7 +102,7 @@ class PersonSerializer(MetaRdfUrlMixin, MetaModelSerializer):
 class PersonReadSerializer(PersonSerializer):
     skills = serializers.SerializerMethodField()
     projects = serializers.SerializerMethodField()
-    organizations = serializers.SerializerMethodField()
+    organizations = serializers.SerializerMethodField(read_only=True)
     isHostOfProjects = serializers.SerializerMethodField()
     memberOfProjects = serializers.SerializerMethodField()
     employedAt = serializers.SerializerMethodField()
@@ -176,6 +176,7 @@ class OrganizationSerializer(MetaRdfUrlMixin, MetaModelSerializer):
 class OrganizationReadSerializer(OrganizationSerializer):
 
     skills = serializers.SerializerMethodField(read_only=True)
+    persons = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Organization
@@ -186,6 +187,9 @@ class OrganizationReadSerializer(OrganizationSerializer):
         for i in instance.skills.all():
             uris.append(uri_builder('skill', i, i.value))
         return uris
+
+    def get_persons(self, instance):
+        return instance.persons.all().values("id", "label")
 
 
 class OrganizationRDFSerializer(MetaModelSerializer):
