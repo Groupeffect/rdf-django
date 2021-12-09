@@ -108,7 +108,6 @@ class MetaModel(models.Model):
         graph = Graph()
         uri = self.get_uri()
 
-        breakpoint()
         if hasattr(self, "persons") and "persons" not in exclude:
             for person in self.persons.all():
                 graph.parse(data=person.get_rdf_flat_representation(),
