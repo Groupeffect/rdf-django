@@ -81,10 +81,10 @@ class SkillRDFSerializer(MetaModelSerializer):
 
     def get_rdf(self, instance):
         include = self.context['request'].GET.get('include')
-        exclude_persons = True
+        exclude_list = ['persons']
         if include == 'person':
-            exclude_persons = False
-        return instance.get_rdf_representation(exclude_persons=exclude_persons)
+            exclude_list = []
+        return instance.get_rdf_representation(exclude_list=exclude_list)
 
 
 class PersonSerializer(MetaRdfUrlMixin, MetaModelSerializer):
